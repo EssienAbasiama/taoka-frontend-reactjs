@@ -29,8 +29,10 @@ export default function AuthLoginForm() {
   });
 
   const defaultValues = {
-    email: "demo@tawk.com",
-    password: "demo1234",
+    email: "kingx@gmail.com",
+    password: "test",
+    // email: "demo@tawk.com",
+    // password: "demo1234",
   };
 
   const methods = useForm({

@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 // import S3 from "../../utils/s3";
-import {v4} from 'uuid';
+import { v4 } from "uuid";
 import S3 from "../../utils/s3";
 import { S3_BUCKET_NAME } from "../../config";
 // ----------------------------------------------------------------------
@@ -125,19 +125,15 @@ export function UpdateTab(tab) {
 export function FetchUsers() {
   return async (dispatch, getState) => {
     await axios
-      .get(
-        "/user/get-users",
-
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getState().auth.token}`,
-          },
-        }
-      )
+      .get("/users/getallusers", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getState().auth.token}`,
+        },
+      })
       .then((response) => {
         console.log(response);
-        dispatch(slice.actions.updateUsers({ users: response.data.data }));
+        dispatch(slice.actions.updateUsers({ users: response.data }));
       })
       .catch((err) => {
         console.log(err);
@@ -148,7 +144,7 @@ export function FetchAllUsers() {
   return async (dispatch, getState) => {
     await axios
       .get(
-        "/user/get-all-verified-users",
+        "/users/getallusers",
 
         {
           headers: {
@@ -159,7 +155,7 @@ export function FetchAllUsers() {
       )
       .then((response) => {
         console.log(response);
-        dispatch(slice.actions.updateAllUsers({ users: response.data.data }));
+        dispatch(slice.actions.updateAllUsers({ users: response.data }));
       })
       .catch((err) => {
         console.log(err);
@@ -169,19 +165,15 @@ export function FetchAllUsers() {
 export function FetchFriends() {
   return async (dispatch, getState) => {
     await axios
-      .get(
-        "/user/get-friends",
-
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getState().auth.token}`,
-          },
-        }
-      )
+      .get("/users/get-friends", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getState().auth.token}`,
+        },
+      })
       .then((response) => {
         console.log(response);
-        dispatch(slice.actions.updateFriends({ friends: response.data.data }));
+        dispatch(slice.actions.updateFriends({ friends: response.data }));
       })
       .catch((err) => {
         console.log(err);
@@ -192,7 +184,7 @@ export function FetchFriendRequests() {
   return async (dispatch, getState) => {
     await axios
       .get(
-        "/user/get-requests",
+        "/users/get-requests",
 
         {
           headers: {
@@ -204,7 +196,7 @@ export function FetchFriendRequests() {
       .then((response) => {
         console.log(response);
         dispatch(
-          slice.actions.updateFriendRequests({ requests: response.data.data })
+          slice.actions.updateFriendRequests({ requests: response.data })
         );
       })
       .catch((err) => {
@@ -230,7 +222,9 @@ export const FetchCallLogs = () => {
       })
       .then((response) => {
         console.log(response);
-        dispatch(slice.actions.fetchCallLogs({ call_logs: response.data.data }));
+        dispatch(
+          slice.actions.fetchCallLogs({ call_logs: response.data.data })
+        );
       })
       .catch((err) => {
         console.log(err);
@@ -240,7 +234,7 @@ export const FetchCallLogs = () => {
 export const FetchUserProfile = () => {
   return async (dispatch, getState) => {
     axios
-      .get("/user/get-me", {
+      .get("/users/get-me", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getState().auth.token}`,
@@ -261,28 +255,25 @@ export const UpdateUserProfile = (formValues) => {
 
     const key = v4();
 
-    try{
+    try {
       S3.getSignedUrl(
         "putObject",
         { Bucket: S3_BUCKET_NAME, Key: key, ContentType: `image/${file.type}` },
         async (_err, presignedURL) => {
           await fetch(presignedURL, {
             method: "PUT",
-  
+
             body: file,
-  
+
             headers: {
               "Content-Type": file.type,
             },
           });
         }
       );
-    }
-    catch(error) {
+    } catch (error) {
       console.log(error);
     }
-
-    
 
     axios
       .patch(
