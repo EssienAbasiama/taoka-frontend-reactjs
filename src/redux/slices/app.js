@@ -1,9 +1,13 @@
+import React, { useState } from "react";
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 // import S3 from "../../utils/s3";
 import { v4 } from "uuid";
 import S3 from "../../utils/s3";
 import { S3_BUCKET_NAME } from "../../config";
+import { useDispatch, useSelector } from "react-redux";
+// import { showSnackbar } from 'path-to-your-auth-slice'; // Update the import path
+
 // ----------------------------------------------------------------------
 
 const initialState = {
@@ -143,16 +147,12 @@ export function FetchUsers() {
 export function FetchAllUsers() {
   return async (dispatch, getState) => {
     await axios
-      .get(
-        "/users/getallusers",
-
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getState().auth.token}`,
-          },
-        }
-      )
+      .get("/users/getallusers", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getState().auth.token}`,
+        },
+      })
       .then((response) => {
         console.log(response);
         dispatch(slice.actions.updateAllUsers({ users: response.data }));
@@ -204,6 +204,40 @@ export function FetchFriendRequests() {
       });
   };
 }
+
+export const useFriendRequest = () => {
+  const [sendFriendRequest, setSendFriendRequest] = useState(false);
+  const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
+
+  const handleSendFriendRequest = async (email) => {
+    try {
+      const { token } = auth;
+
+      console.log("I am Here token");
+      const response = await axios.get(`/users/sendFriendRequest/${email}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        console.log("Friend Request Sent Successfully");
+        setSendFriendRequest(true);
+        // Dispatch any success action if needed
+      } else {
+        console.log("Else : Error Sending Friend Request");
+        // Dispatch any error action if needed
+      }
+    } catch (error) {
+      console.log("Error Sending Friend Request: ", error.message);
+      dispatch(showSnackbar({ severity: "error", message: error.message }));
+    }
+  };
+
+  return [sendFriendRequest, handleSendFriendRequest];
+};
 
 export const SelectConversation = ({ room_id }) => {
   return async (dispatch, getState) => {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Badge,
@@ -11,7 +11,8 @@ import {
 import { styled, useTheme } from "@mui/material/styles";
 import { Chat } from "phosphor-react";
 import { socket } from "../socket";
-
+import { useFriendRequest } from "./../redux/slices/app.js";
+import axios from "axios";
 const user_id = window.localStorage.getItem("user_id");
 
 const StyledChatBox = styled(Box)(({ theme }) => ({
@@ -49,10 +50,80 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
   },
 }));
 
-const UserElement = ({ img, firstName, lastName, online, _id }) => {
+const UserElement = ({ img, firstName, lastName, online, id, email }) => {
   const theme = useTheme();
 
   const name = `${firstName} ${lastName}`;
+
+  const requestAlreadySent = () => {
+    alert("Request Already sent to " + email);
+  };
+  const [sendFriendRequest, handleSendFriendRequest] = useFriendRequest();
+
+  return (
+    <StyledChatBox
+      sx={{
+        width: "100%",
+
+        borderRadius: 1,
+
+        backgroundColor: theme.palette.background.paper,
+      }}
+      p={2}
+    >
+      <Stack
+        direction="row"
+        alignItems={"center"}
+        justifyContent="space-between"
+      >
+        <Stack direction="row" alignItems={"center"} spacing={2}>
+          {" "}
+          {
+            // online
+            true ? (
+              <StyledBadge
+                overlap="circular"
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                variant="dot"
+              >
+                <Avatar alt={name} src={img} />
+              </StyledBadge>
+            ) : (
+              <Avatar alt={name} src={img} />
+            )
+          }
+          <Stack spacing={0.3}>
+            <Typography variant="subtitle2">{name}</Typography>
+          </Stack>
+        </Stack>
+        <Stack direction={"row"} spacing={2} alignItems={"center"}>
+          {sendFriendRequest ? (
+            <Button onClick={() => requestAlreadySent}>Request Sent</Button>
+          ) : (
+            <Button onClick={() => handleSendFriendRequest(email)}>
+              Add Friend
+            </Button>
+          )}
+          {/* <Button onClick={handleSendFriendRequest}>Add Friend</Button> */}
+        </Stack>
+      </Stack>
+    </StyledChatBox>
+  );
+};
+
+const FriendRequestElement = ({
+  img,
+  firstName,
+  lastName,
+  incoming,
+  missed,
+  online,
+  id,
+}) => {
+  const theme = useTheme();
+
+  const name = `${firstName} ${lastName}`;
+  const [friendAdded, isFriendAdded] = useState(false);
 
   return (
     <StyledChatBox
@@ -88,22 +159,41 @@ const UserElement = ({ img, firstName, lastName, online, _id }) => {
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          <Button
-            onClick={() => {
-              socket.emit("friend_request", { to: _id, from: user_id }, () => {
-                alert("request sent");
-              });
-            }}
-          >
-            Send Request
-          </Button>
+          {isFriendAdded ? (
+            <Button>Request Accepted</Button>
+          ) : (
+            <Button
+              onClick={async (email) => {
+                //  emit "accept_request" event
+                // socket.emit("accept_request", { request_id: id });
+                try {
+                  const response = await axios.get(
+                    `http://localhost:8080/api/v1/users/acceptFriendRequest/${email}`
+                  );
+
+                  if (response.status === 200) {
+                    console.log(email + "Added as Friend");
+                    friendAdded(true);
+                  } else {
+                    console.log("Error adding Friend");
+                  }
+                } catch (error) {
+                  console.log("Error adding friend: ", error.message);
+                }
+              }}
+            >
+              Accept Request
+            </Button>
+          )}
         </Stack>
       </Stack>
     </StyledChatBox>
   );
 };
 
-const FriendRequestElement = ({
+// FriendElement
+
+const FriendElement = ({
   img,
   firstName,
   lastName,
@@ -150,73 +240,10 @@ const FriendRequestElement = ({
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          <Button
-            onClick={() => {
-              //  emit "accept_request" event
-              socket.emit("accept_request", { request_id: id });
-            }}
-          >
-            Accept Request
-          </Button>
-        </Stack>
-      </Stack>
-    </StyledChatBox>
-  );
-};
-
-// FriendElement
-
-const FriendElement = ({
-  img,
-  firstName,
-  lastName,
-  incoming,
-  missed,
-  online,
-  _id,
-}) => {
-  const theme = useTheme();
-
-  const name = `${firstName} ${lastName}`;
-
-  return (
-    <StyledChatBox
-      sx={{
-        width: "100%",
-
-        borderRadius: 1,
-
-        backgroundColor: theme.palette.background.paper,
-      }}
-      p={2}
-    >
-      <Stack
-        direction="row"
-        alignItems={"center"}
-        justifyContent="space-between"
-      >
-        <Stack direction="row" alignItems={"center"} spacing={2}>
-          {" "}
-          {online ? (
-            <StyledBadge
-              overlap="circular"
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              variant="dot"
-            >
-              <Avatar alt={name} src={img} />
-            </StyledBadge>
-          ) : (
-            <Avatar alt={name} src={img} />
-          )}
-          <Stack spacing={0.3}>
-            <Typography variant="subtitle2">{name}</Typography>
-          </Stack>
-        </Stack>
-        <Stack direction={"row"} spacing={2} alignItems={"center"}>
           <IconButton
             onClick={() => {
               // start a new conversation
-              socket.emit("start_conversation", { to: _id, from: user_id });
+              socket.emit("start_conversation", { to: id, from: user_id });
             }}
           >
             <Chat />
