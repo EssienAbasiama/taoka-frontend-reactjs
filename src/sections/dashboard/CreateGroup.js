@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect} from "react";
 import * as Yup from "yup";
 import {
   Button,
@@ -10,6 +10,8 @@ import {
 } from "@mui/material";
 
 import { yupResolver } from "@hookform/resolvers/yup";
+import { FetchFriends } from "./../../redux/slices/app.js";
+import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import FormProvider from "../../components/hook-form/FormProvider";
 import { RHFTextField } from "../../components/hook-form";
@@ -35,6 +37,19 @@ const TAGS_OPTION = [
   "3 Idiots",
 ];
 
+const FRIENDS_NAME = getFriends();
+
+  function getFriends() {
+  const dispatch = useDispatch();
+
+  const { friends } = useSelector((state) => state.app);
+
+  useEffect(() => {
+    dispatch(FetchFriends());
+  }, []);
+
+  return friends;
+};
 const CreateGroupForm = ({ handleClose }) => {
   const NewGroupSchema = Yup.object().shape({
     title: Yup.string().required("Title is required"),
@@ -79,7 +94,9 @@ const CreateGroupForm = ({ handleClose }) => {
           label="Members"
           multiple
           freeSolo
-          options={TAGS_OPTION.map((option) => option)}
+          options={TAGS_OPTION.map(
+            (option) => option.firstName + "  " + option.lastName
+          )}
           ChipProps={{ size: "medium" }}
         />
         <Stack

@@ -11,7 +11,7 @@ import {
 import { styled, useTheme } from "@mui/material/styles";
 import { Chat } from "phosphor-react";
 import { socket } from "../socket";
-import { useFriendRequest } from "./../redux/slices/app.js";
+import { useFriendRequest, useAddFriend } from "./../redux/slices/app.js";
 import axios from "axios";
 const user_id = window.localStorage.getItem("user_id");
 
@@ -119,11 +119,12 @@ const FriendRequestElement = ({
   missed,
   online,
   id,
+  email,
 }) => {
   const theme = useTheme();
 
   const name = `${firstName} ${lastName}`;
-  const [friendAdded, isFriendAdded] = useState(false);
+  const [friendAdded, handleAcceptFriendRequest] = useAddFriend();
 
   return (
     <StyledChatBox
@@ -159,29 +160,10 @@ const FriendRequestElement = ({
           </Stack>
         </Stack>
         <Stack direction={"row"} spacing={2} alignItems={"center"}>
-          {isFriendAdded ? (
+          {friendAdded ? (
             <Button>Request Accepted</Button>
           ) : (
-            <Button
-              onClick={async (email) => {
-                //  emit "accept_request" event
-                // socket.emit("accept_request", { request_id: id });
-                try {
-                  const response = await axios.get(
-                    `http://localhost:8080/api/v1/users/acceptFriendRequest/${email}`
-                  );
-
-                  if (response.status === 200) {
-                    console.log(email + "Added as Friend");
-                    friendAdded(true);
-                  } else {
-                    console.log("Error adding Friend");
-                  }
-                } catch (error) {
-                  console.log("Error adding friend: ", error.message);
-                }
-              }}
-            >
+            <Button onClick={() => handleAcceptFriendRequest(email)}>
               Accept Request
             </Button>
           )}

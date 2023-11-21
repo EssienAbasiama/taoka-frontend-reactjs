@@ -180,6 +180,27 @@ export function FetchFriends() {
       });
   };
 }
+
+// export function GetFriends(){
+//   return async (dispatch, getState) => {
+//     await axios
+//       .get("/users/get-friends", {
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${getState().auth.token}`,
+//         },
+//       })
+//       .then((response) => {
+//         console.log(response);
+//         dispatch(slice.actions.updateFriends({ friends: response.data }));
+//       })
+//       .catch((err) => {
+//         console.log(err);
+//       });
+//   };
+
+//   return friends;
+// };
 export function FetchFriendRequests() {
   return async (dispatch, getState) => {
     await axios
@@ -237,6 +258,38 @@ export const useFriendRequest = () => {
   };
 
   return [sendFriendRequest, handleSendFriendRequest];
+};
+
+export const useAddFriend = () => {
+  const [friendAdded, isFriendAdded] = useState(false);
+  const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
+
+  const handleAcceptFriendRequest = async (email) => {
+    try {
+      const { token } = auth;
+      console.log("I am Here token ", token);
+      const response = await axios.get(`/users/acceptFriendRequest/${email}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        console.log("Fried request Accepted");
+        isFriendAdded(true);
+        // Dispatch any success action if needed
+      } else {
+        console.log("Else : Error Accepting Friend Request");
+        // Dispatch any error action if needed
+      }
+    } catch (error) {
+      console.log("Error Accepting Friend Request: ", error);
+      dispatch(showSnackbar({ severity: "error", message: error.message }));
+    }
+  };
+  return [friendAdded, handleAcceptFriendRequest];
 };
 
 export const SelectConversation = ({ room_id }) => {

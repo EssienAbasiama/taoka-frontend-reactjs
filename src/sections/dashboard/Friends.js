@@ -59,6 +59,18 @@ const FriendsList = () => {
   );
 };
 
+const fetchFriends = () => {
+  const dispatch = useDispatch();
+
+  const { friends } = useSelector((state) => state.app);
+
+  useEffect(() => {
+    dispatch(FetchFriends());
+  }, []);
+
+  return friends;
+};
+
 const RequestsList = () => {
   const dispatch = useDispatch();
 
